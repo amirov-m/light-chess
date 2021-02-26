@@ -65,30 +65,31 @@ class PieceMoves:
 
         # Init list of moves.
         en_passant = []
-        # Retrieve start piece.
-        piece_start = game.board.get_piece(pos)
-        # Check if piece_start not empty.
-        if piece_start is not None and piece_start.type == PieceType.PAWN:
-            # 2 directions.
-            shifts = [(-1, 0), (1, 0)]
-            for shift_x, shift_y in shifts:
-                # Retrieve not start piece.
-                piece = game.board.get_piece(Position(pos.x + shift_x, pos.y + shift_y))
-                if piece is not None and piece.type == PieceType.PAWN:
-                    # Retrieve last_move.
-                    last_move = game.history_moves[-1]
-                    # Check if pawn makes the last move and if it jumps over 2 positions.
-                    if (
-                        Position(pos.x + shift_x, pos.y + shift_y) == last_move.finish
-                        and abs(last_move.start.y - last_move.finish.y) == 2
-                    ):
-                        # Add move in dependence of colour.
-                        if game.turn == Colour.WHITE:
-                            move = Move(pos, Position(pos.x + shift_x, pos.y + 1))
-                            en_passant.append(move)
-                        else:
-                            move = Move(pos, Position(pos.x + shift_x, pos.y - 1))
-                            en_passant.append(move)
+        if len(game.history_moves) != 0:
+            # Retrieve start piece.
+            piece_start = game.board.get_piece(pos)
+            # Check if piece_start not empty.
+            if piece_start is not None and piece_start.type == PieceType.PAWN:
+                # 2 directions.
+                shifts = [(-1, 0), (1, 0)]
+                for shift_x, shift_y in shifts:
+                    # Retrieve not start piece.
+                    piece = game.board.get_piece(Position(pos.x + shift_x, pos.y + shift_y))
+                    if piece is not None and piece.type == PieceType.PAWN:
+                        # Retrieve last_move.
+                        last_move = game.history_moves[-1]
+                        # Check if pawn makes the last move and if it jumps over 2 positions.
+                        if (
+                            Position(pos.x + shift_x, pos.y + shift_y) == last_move.finish
+                            and abs(last_move.start.y - last_move.finish.y) == 2
+                        ):
+                            # Add move in dependence of colour.
+                            if game.turn == Colour.WHITE:
+                                move = Move(pos, Position(pos.x + shift_x, pos.y + 1))
+                                en_passant.append(move)
+                            else:
+                                move = Move(pos, Position(pos.x + shift_x, pos.y - 1))
+                                en_passant.append(move)
         return en_passant
 
     @staticmethod

@@ -12,6 +12,7 @@ from entities.colour import Colour
 from entities.move import Move
 from entities.pieces import Piece, PieceType
 from entities.position import Position
+from engine.piece_moves import PieceMoves
 
 
 class GameLogic:
@@ -99,6 +100,8 @@ class GameLogic:
             return False
         # Make move
         further_game = GameLogic.make_move(move, game)
+        if len(further_game.history_moves) == len(game.history_moves):
+            return False
         # Check if check occurs after making move
         return not GameLogic.is_check(
             further_game.board, Colour.change_colour(further_game.turn)
