@@ -5,7 +5,6 @@ from __future__ import annotations
 import copy
 
 from engine.game import Game
-from engine.piece_moves import PieceMoves
 from engine.positions_under_threat import PositionsUnderThreat
 from entities.board import Board
 from entities.colour import Colour
@@ -13,12 +12,13 @@ from entities.move import Move
 from entities.pieces import Piece, PieceType
 from entities.position import Position
 from engine.piece_moves import PieceMoves
+from entities.possible_castle import PossibleCastle , Castle
 
 
 class GameLogic:
-    """Class used to handle game logic. This class is technically utilization of PieceMoves with
-    additional checking of check after each move. 3 main method: is_mate(), is_check() and
-    make_move() are necessary to handle chess game.
+    """Class used to handle game logic.
+
+    3 main method: is_mate(), is_check() and make_move() are necessary to handle chess game.
     """
 
     @staticmethod
@@ -40,11 +40,39 @@ class GameLogic:
         check = at least one opponent piece aims at own king
         """
 
-        # Retrieve king position
         king_pos = board.get_positions_for_piece(Piece(PieceType.KING, colour))[0]
         return king_pos in PositionsUnderThreat.all_positions_under_threat_for_side(
             colour, board
         )
+
+    @staticmethod
+    def update_enpassant_after_move(piece: Piece, move: Move):
+        if piece.type == PieceType.PAWN:
+            jump = abs(move.start.y - move.finish.y)
+            if jump == 2:
+                en_passant_y = int((move.start.y + move.finish.y)/2)
+                return Position(move.start.x, en_passant_y)
+
+    @staticmethod
+    def update_castle_after_move(piece: Piece, move: Move, castle: PossibleCastle):
+        if piece.colour == Colour.WHITE:
+            if move.start in [Position(0, 0), Position(4, 0)] and Castle.WHITE_LONG in castle.list_castles:
+                castle.list_castles.remove(Castle.WHITE_LONG)
+            if move.start in [Position(7, 0), Position(4, 0)] and Castle.WHITE_SHORT in castle.list_castles:
+                castle.list_castles.remove(Castle.WHITE_SHORT)
+        else:
+            if move.start in [Position(0, 7), Position(4, 7)] and Castle.BLACK_LONG in castle.list_castles:
+                castle.list_castles.remove(Castle.BLACK_LONG)
+            if move.start in [Position(7, 7), Position(4, 7)] and Castle.BLACK_SHORT in castle.list_castles:
+                castle.list_castles.remove(Castle.BLACK_SHORT)
+        return castle
+
+
+    @staticmethod
+    def update_castle_and_enpassant_after_move(piece: Piece, move: Move, castle: PossibleCastle):
+        castle = GameLogic.update_castle_after_move(piece, move, castle)
+        en_passant = GameLogic.update_enpassant_after_move(piece, move)
+        return castle, en_passant
 
     @staticmethod
     def make_move(move: Move, game: Game) -> Game:
@@ -53,35 +81,31 @@ class GameLogic:
         Attention: no checking of check after move. Technically move can be not valid!!!
         """
 
-        # Copy game (pass by value)
         game = copy.deepcopy(game)
-        # Retrieve piece at start position
         piece = game.board.get_piece(move.start)
-        # Get possible moves
-        possible_moves = PieceMoves.moves(piece.type, move.start, game)
-        # Check if move satisfies
-        if move in possible_moves:
-            # Check if castling occurs
-            if move in PieceMoves.castling_moves(move.start, game):
-                game.board.set_piece(
-                    Position(int((move.finish.x + move.start.x) / 2), move.start.y),
-                    Piece(PieceType.ROOK, game.turn),
-                )
-                # Short castling
-                if move.finish.x - move.start.x > 0:
-                    game.board.remove_piece(Position(7, move.start.y))
-                # Long castling
-                else:
-                    game.board.remove_piece(Position(0, move.start.y))
-            # Check if en passant occurs
-            if move in PieceMoves.en_passant_moves(move.start, game):
-                game.board.remove_piece(Position(move.finish.x, move.start.y))
-            # Update board
-            game.board.set_piece(move.finish, piece)
-            game.board.remove_piece(move.start)
-            # Update history
-            game.history_moves.append(move)
-        return Game(game.board, Colour.change_colour(game.turn), game.history_moves)
+        if piece is not None:
+            possible_moves = PieceMoves.moves(piece.type, move.start, game)
+            if move in possible_moves:
+                # Castling
+                if move in PieceMoves.castling_moves(move.start, game):
+                    game.board.set_piece(
+                        Position(int((move.finish.x + move.start.x) / 2), move.start.y),
+                        Piece(PieceType.ROOK, game.turn),
+                    )
+
+                    if move.finish.x - move.start.x > 0:
+                        game.board.remove_piece(Position(7, move.start.y))  # Short castling
+                    else:
+                        game.board.remove_piece(Position(0, move.start.y))  # Long castling
+                # En passant
+                if move.finish == game.en_passant and piece.type == PieceType.PAWN:
+                    game.board.remove_piece(Position(move.finish.x, move.start.y))
+                # Update board
+                game.board.set_piece(move.finish, piece)
+                game.board.remove_piece(move.start)
+                castle, en_passant = GameLogic.update_castle_and_enpassant_after_move(piece, move, game.castle)
+                return Game(game.board, Colour.change_colour(game.turn), game.castle, en_passant)
+        return game
 
     @staticmethod
     def is_move_possible(game: Game, move: Move) -> bool:
@@ -100,7 +124,7 @@ class GameLogic:
             return False
         # Make move
         further_game = GameLogic.make_move(move, game)
-        if len(further_game.history_moves) == len(game.history_moves):
+        if further_game.turn == game.turn:
             return False
         # Check if check occurs after making move
         return not GameLogic.is_check(

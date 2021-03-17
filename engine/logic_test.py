@@ -9,6 +9,7 @@ from entities.colour import Colour
 from entities.move import Move
 from entities.pieces import Piece, Pieces, PieceType
 from entities.position import Position
+from entities.possible_castle import PossibleCastle
 
 
 class TestGameLogic(unittest.TestCase):
@@ -32,9 +33,7 @@ class TestGameLogic(unittest.TestCase):
         self.board.set_piece(Position(4, 3), Pieces.BLACK_ROOK)
         self.board.set_piece(Position(2, 2), Pieces.BLACK_PAWN)
         # Create game
-        self.game = Game(
-            self.board, Colour.WHITE, [Move(Position(3, 6), Position(3, 4))]
-        )
+        self.game = Game(self.board, Colour.WHITE, PossibleCastle(), Position(3, 5))
 
     def test_is_check(self):
         """Test of is_check() method."""
@@ -45,17 +44,14 @@ class TestGameLogic(unittest.TestCase):
         """Test of is_check() method."""
 
         assert not GameLogic.is_mate(self.game)
-        # Create dummy board
+
         board = Board()
         board.set_piece(Position(0, 1), Piece(PieceType.PAWN, Colour.WHITE))
         board.set_piece(Position(1, 1), Piece(PieceType.PAWN, Colour.WHITE))
         board.set_piece(Position(0, 0), Piece(PieceType.KING, Colour.WHITE))
         board.set_piece(Position(2, 0), Piece(PieceType.ROOK, Colour.BLACK))
-        history_moves = [
-            Move(Position(4, 3), Position(4, 4)),
-            Move(Position(3, 6), Position(3, 4)),
-        ]
-        game = Game(board, Colour.WHITE, history_moves)
+
+        game = Game(board, Colour.WHITE, PossibleCastle())
         assert GameLogic.is_mate(game)
 
     def test_make_move(self):
@@ -64,7 +60,6 @@ class TestGameLogic(unittest.TestCase):
         # Check short castling
         game = GameLogic.make_move(Move(Position(4, 0), Position(6, 0)), self.game)
         assert game.turn != self.game.turn
-        assert game.history_moves[-1] == Move(Position(4, 0), Position(6, 0))
         assert game.board.get_piece(Position(4, 0)) is None
         assert game.board.get_piece(Position(5, 0)).type == PieceType.ROOK
         assert game.board.get_piece(Position(6, 0)).type == PieceType.KING
@@ -72,7 +67,6 @@ class TestGameLogic(unittest.TestCase):
         # Check long castling
         game = GameLogic.make_move(Move(Position(4, 0), Position(2, 0)), self.game)
         assert game.turn != self.game.turn
-        assert game.history_moves[-1] == Move(Position(4, 0), Position(2, 0))
         assert game.board.get_piece(Position(4, 0)) is None
         assert game.board.get_piece(Position(3, 0)).type == PieceType.ROOK
         assert game.board.get_piece(Position(2, 0)).type == PieceType.KING
@@ -81,7 +75,6 @@ class TestGameLogic(unittest.TestCase):
         # Check en_passant
         game = GameLogic.make_move(Move(Position(4, 4), Position(3, 5)), self.game)
         assert game.turn != self.game.turn
-        assert game.history_moves[-1] == Move(Position(4, 4), Position(3, 5))
         assert game.board.get_piece(Position(4, 4)) is None
         assert game.board.get_piece(Position(3, 5)).type == PieceType.PAWN
         assert game.board.get_piece(Position(3, 5)).colour == Colour.WHITE

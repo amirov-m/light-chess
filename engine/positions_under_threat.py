@@ -12,13 +12,13 @@ from entities.position import Position
 
 
 class PositionsUnderThreat:
-    """Class used to returning list of positions under thread. 'under thread' means all positions
+    """Class used to to return list of positions under thread. 'under thread' means all positions
     which enemy king cannot reach, because of the check.
     """
 
     @staticmethod
     def is_position_enemy(pos: Position, colour: Colour, board: Board) -> bool:
-        """Check if position occupied with enemy piece."""
+        """Checks if position occupied with enemy piece."""
 
         # Retrieve piece.
         piece = board.get_piece(pos)
@@ -26,8 +26,8 @@ class PositionsUnderThreat:
 
     @staticmethod
     def is_position_enemy_or_empty(pos: Position, colour: Colour, board: Board) -> bool:
-        """Check if position occupied with enemy piece or empty.
-        Return False if pos is out of the board.
+        """Checks if position occupied with enemy piece or empty.
+        Returns False if pos is out of the board.
         """
 
         # Check if pos locates on the board.
@@ -40,7 +40,7 @@ class PositionsUnderThreat:
     def check_positions(
         pos: Position, colour: Colour, board: Board, shifts: list
     ) -> List[Position]:
-        """Take input list of shifts and verify which of them are possible."""
+        """Checks which positions are possible."""
 
         # Init position list.
         positions_under_threat = []
@@ -60,8 +60,9 @@ class PositionsUnderThreat:
     def check_positions_with_obstacles(
         pos: Position, colour: Colour, board: Board, shifts: list
     ) -> List[Position]:
-        """Take input list of shifts and verify which of them are possible.
-        Iterate through shifts till the first obstacle. Obstacle means own or enemy piece.
+        """Checks which positions are possible.
+
+        Iterates through shifts till the first obstacle. Obstacle means own or enemy piece.
         """
 
         # Init position list.
@@ -115,7 +116,7 @@ class PositionsUnderThreat:
     def positions_under_king_threat(
         pos: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by king."""
+        """Returns list of positions under threat by king."""
 
         # Init list of shifts
         shifts = list(itertools.product([-1, 0, 1], repeat=2))
@@ -125,7 +126,8 @@ class PositionsUnderThreat:
     def positions_under_queen_threat(
         position: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by queen.
+        """Returns list of positions under threat by queen.
+
         Can be calculated by combining returns from bishop and rook methods.
         """
 
@@ -140,8 +142,9 @@ class PositionsUnderThreat:
     def positions_under_bishop_threat(
         pos: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by bishop.
-        Check 4 directions till the first obstacle: up_right, down_right, down_left and up_left.
+        """Returns list of positions under threat by bishop.
+
+        Checks 4 directions till the first obstacle: up_right, down_right, down_left and up_left.
         """
 
         # Init lists of shifts.
@@ -170,7 +173,7 @@ class PositionsUnderThreat:
     def positions_under_knight_threat(
         pos: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by knight."""
+        """Returns list of positions under threat by knight."""
 
         # Init list of shifts.
         shifts = [
@@ -183,8 +186,9 @@ class PositionsUnderThreat:
     def positions_under_rook_threat(
         pos: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by rook.
-        Check 4 directions till the first obstacle: up, right, down and left.
+        """Returns list of positions under threat by rook.
+
+        Checks 4 directions till the first obstacle: up, right, down and left.
         """
 
         # Init lists of shifts.
@@ -208,7 +212,7 @@ class PositionsUnderThreat:
     def positions_under_pawn_threat(
         pos: Position, colour: Colour, board: Board
     ) -> List[Position]:
-        """Return list of positions under threat by pawn."""
+        """Returns list of positions under threat by pawn."""
 
         # Init list of shifts.
         if colour == Colour.WHITE:

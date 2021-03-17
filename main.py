@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from engine.game import Game
-from entities.board import Board
+from application.app import create_app, db
 
 
 def main():
-    _ = Board.create_start_board()
-    _ = Game.create_start_game()
+    app = create_app()
+    db.create_all(app=app)
+    app.run(debug=True)
 
 
 if __name__ == "__main__":
